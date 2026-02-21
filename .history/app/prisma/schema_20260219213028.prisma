@@ -1,0 +1,4 @@
+@@index([sku])          // on Product
+@@index([invoiceNumber]) // on Invoice
+@@index([productId])    // on StockMovement
+@@index([status])       // on Maintenance
