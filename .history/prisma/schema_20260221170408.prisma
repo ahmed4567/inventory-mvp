@@ -11,7 +11,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
- }
+}
 
 model User {
   id           String   @id @default(cuid())
@@ -135,3 +135,16 @@ model Maintenance {
 
   @@index([status])
 }
+```
+
+Once you've saved the file, run these two commands in your terminal:
+```
+npx prisma migrate dev --name init
+```
+```
+npx prisma generate
+```
+
+Then open Prisma Studio to confirm all 8 tables were created:
+```
+npx prisma studio
