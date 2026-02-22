@@ -1,0 +1,168 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+ }
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  name           String
+  sku            String        @unique
+  quantity       Int           @default(0)
+  costPrice      Decimal
+  sellingPrice   Decimal
+  reorderLevel   Int           @default(0)
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  stockMovements StockMovement[]
+  invoiceItems   InvoiceItem[]
+  
+  @@index([sku])
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  address      String?
+  invoices     Invoice[]
+  maintenances Maintenance[] // ADD THIS
+}
+
+model Supplier {
+  id           String        @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  address      String?
+  invoices     Invoice[]
+  maintenances Maintenance[] // ADD THIS
+}
+
+enum InvoiceType {
+  SALE
+  PURCHASE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  CONFIRMED
+  CANCELLED
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  type          InvoiceType
+  status        InvoiceStatus @default(CONFIRMED)
+  total         Decimal
+  customerId    String?
+  supplierId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  supplier      Supplier?     @relation(fields: [supplierId], references: [id])
+  items         InvoiceItem[]
+  createdAt     DateTime      @default(now())
+
+  @@index([invoiceNumber])
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  invoiceId String
+  productId String
+  quantity  Int
+  unitPrice Decimal
+  subtotal  Decimal
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+enum MovementType {
+  SALE
+  PURCHASE
+  MAINTENANCE_OUT
+  MAINTENANCE_IN
+  ADJUSTMENT
+}
+
+model StockMovement {
+  id        String       @id @default(cuid())
+  productId String
+  type      MovementType
+  quantity  Int
+  reference String?
+  product   Product      @relation(fields: [productId], references: [id])
+  createdAt DateTime     @default(now())
+
+  @@index([productId])
+}
+
+enum MaintenanceStatus {
+  RECEIVED
+  IN_PROGRESS
+  WAITING_FOR_PARTS
+  REPAIRED
+  DELIVERED
+  CANCELLED
+}
+
+enum MaintenanceHandler {
+  IN_HOUSE
+  SPECIALIST_SUPPLIER
+  ORIGINAL_VENDOR
+}
+
+model Maintenance {
+  id               String             @id @default(cuid())
+
+  // Customer who brought the item
+  customerId       String
+  customer         Customer           @relation(fields: [customerId], references: [id])
+
+  // Product — either from catalog or free text
+  productId        String?
+  product          Product?           @relation(fields: [productId], references: [id])
+  productName      String             // always filled — catalog name or custom name
+  productBrand     String?
+  productModel     String?
+  serialNumber     String?
+
+  // Issue & handling
+  issueDescription String
+  handler          MaintenanceHandler @default(IN_HOUSE)
+  supplierId       String?            // filled if handler = SPECIALIST_SUPPLIER
+  supplier         Supplier?          @relation(fields: [supplierId], references: [id])
+  vendorName       String?            // filled if handler = ORIGINAL_VENDOR
+
+  // Status & dates
+  status           MaintenanceStatus  @default(RECEIVED)
+  receivedAt       DateTime           @default(now())
+  repairedAt       DateTime?
+  deliveredAt      DateTime?
+
+  // Financials
+  serviceFee       Decimal?
+  notes            String?
+
+  createdAt        DateTime           @default(now())
+
+  @@index([customerId])
+  @@index([status])
+}

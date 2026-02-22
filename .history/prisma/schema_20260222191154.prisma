@@ -1,0 +1,137 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+ }
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Product {
+  id             String        @id @default(cuid())
+  name           String
+  sku            String        @unique
+  quantity       Int           @default(0)
+  costPrice      Decimal
+  sellingPrice   Decimal
+  reorderLevel   Int           @default(0)
+  deletedAt      DateTime?
+  createdAt      DateTime      @default(now())
+  stockMovements StockMovement[]
+  invoiceItems   InvoiceItem[]
+  maintenances   Maintenance[]
+
+  @@index([sku])
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  invoices  Invoice[]
+}
+
+model Supplier {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  invoices  Invoice[]
+}
+
+enum InvoiceType {
+  SALE
+  PURCHASE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  CONFIRMED
+  CANCELLED
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  type          InvoiceType
+  status        InvoiceStatus @default(CONFIRMED)
+  total         Decimal
+  customerId    String?
+  supplierId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  supplier      Supplier?     @relation(fields: [supplierId], references: [id])
+  items         InvoiceItem[]
+  createdAt     DateTime      @default(now())
+
+  @@index([invoiceNumber])
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  invoiceId String
+  productId String
+  quantity  Int
+  unitPrice Decimal
+  subtotal  Decimal
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+enum MovementType {
+  SALE
+  PURCHASE
+  MAINTENANCE_OUT
+  MAINTENANCE_IN
+  ADJUSTMENT
+}
+
+model StockMovement {
+  id        String       @id @default(cuid())
+  productId String
+  type      MovementType
+  quantity  Int
+  reference String?
+  product   Product      @relation(fields: [productId], references: [id])
+  createdAt DateTime     @default(now())
+
+  @@index([productId])
+}
+
+enum MaintenanceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  RETURNED
+  CANCELLED
+}
+
+model Maintenance {
+  id               String            @id @default(cuid())
+  productId        String
+  serialNumber     String
+  issueDescription String
+  status           MaintenanceStatus @default(PENDING)
+  cost             Decimal?
+  product          Product           @relation(fields: [productId], references: [id])
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime          @default(now())
+
+  @@index([status])
+}
