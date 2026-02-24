@@ -4,7 +4,6 @@ import { getProduct, updateProduct, softDeleteProduct } from "@/app/actions/prod
 import { useRouter } from "next/navigation";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 
 export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
