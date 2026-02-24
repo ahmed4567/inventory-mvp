@@ -2,13 +2,13 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  const isLoggedIn = !!token;
+  const isLoggedIn  = !!token;
   const isDashboard = request.nextUrl.pathname.startsWith("/dashboard");
 
   if (isDashboard && !isLoggedIn) {
@@ -21,3 +21,10 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: ["/dashboard/:path*"],
 };
+```
+
+**Step 2 — Delete `middleware.ts`** from your project root.
+
+**Step 3 — Restart your dev server:**
+```
+npm run dev

@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  SUPERUSER
+  USER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+enum NotificationType {
+  NEW_REGISTRATION
+  PASSWORD_RESET_REQUEST
+  ASSIGNED_MAINTENANCE
+  MAINTENANCE_STATUS_CHANGED
+  ACCOUNT_APPROVED
+  SUPERUSER_MESSAGE
+}
+
+enum InvoiceType {
+  SALE
+  PURCHASE
+}
+
+enum InvoiceStatus {
+  DRAFT
+  CONFIRMED
+  CANCELLED
+}
+
+enum MovementType {
+  SALE
+  PURCHASE
+  MAINTENANCE_OUT
+  MAINTENANCE_IN
+  ADJUSTMENT
+}
+
+enum MaintenanceStatus {
+  RECEIVED
+  IN_PROGRESS
+  WAITING_FOR_PARTS
+  REPAIRED
+  DELIVERED
+  CANCELLED
+}
+
+enum MaintenanceHandler {
+  IN_HOUSE
+  SPECIALIST_SUPPLIER
+  ORIGINAL_VENDOR
+}
+
+model User {
+  id                   String         @id @default(cuid())
+  email                String         @unique
+  name                 String?
+  passwordHash         String
+  role                 UserRole       @default(USER)
+  status               UserStatus     @default(PENDING)
+  createdAt            DateTime       @default(now())
+  notifications        Notification[] @relation("ReceivedNotifications")
+  assignedMaintenances Maintenance[]  @relation("AssignedTechnician")
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  message     String
+  recipientId String
+  recipient   User             @relation("ReceivedNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  read        Boolean          @default(false)
+  link        String?
+  createdAt   DateTime         @default(now())
+
+  @@index([recipientId, read])
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  address      String?
+  invoices     Invoice[]
+  maintenances Maintenance[]
+}
+
+model Supplier {
+  id           String        @id @default(cuid())
+  name         String
+  phone        String?
+  email        String?
+  address      String?
+  invoices     Invoice[]
+  maintenances Maintenance[]
+}
+
+model Product {
+  id             String          @id @default(cuid())
+  name           String
+  sku            String          @unique
+  quantity       Int             @default(0)
+  costPrice      Decimal
+  sellingPrice   Decimal
+  reorderLevel   Int             @default(0)
+  deletedAt      DateTime?
+  createdAt      DateTime        @default(now())
+  stockMovements StockMovement[]
+  invoiceItems   InvoiceItem[]
+  maintenances   Maintenance[]
+
+  @@index([sku])
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique
+  type          InvoiceType
+  status        InvoiceStatus @default(CONFIRMED)
+  total         Decimal
+  customerId    String?
+  supplierId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
+  supplier      Supplier?     @relation(fields: [supplierId], references: [id])
+  items         InvoiceItem[]
+  createdAt     DateTime      @default(now())
+
+  @@index([invoiceNumber])
+}
+
+model InvoiceItem {
+  id        String  @id @default(cuid())
+  invoiceId String
+  productId String
+  quantity  Int
+  unitPrice Decimal
+  subtotal  Decimal
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model StockMovement {
+  id        String       @id @default(cuid())
+  productId String
+  type      MovementType
+  quantity  Int
+  reference String?
+  product   Product      @relation(fields: [productId], references: [id])
+  createdAt DateTime     @default(now())
+
+  @@index([productId])
+}
+
+model Maintenance {
+  id               String             @id @default(cuid())
+  customerId       String
+  customer         Customer           @relation(fields: [customerId], references: [id])
+  productId        String?
+  product          Product?           @relation(fields: [productId], references: [id])
+  productName      String
+  productBrand     String?
+  productModel     String?
+  serialNumber     String?
+  issueDescription String
+  handler          MaintenanceHandler @default(IN_HOUSE)
+  supplierId       String?
+  supplier         Supplier?          @relation(fields: [supplierId], references: [id])
+  vendorName       String?
+  status           MaintenanceStatus  @default(RECEIVED)
+  assignedToId     String?
+  assignedTo       User?              @relation("AssignedTechnician", fields: [assignedToId], references: [id])
+  receivedAt       DateTime           @default(now())
+  repairedAt       DateTime?
+  deliveredAt      DateTime?
+  serviceFee       Decimal?
+  notes            String?
+  createdAt        DateTime           @default(now())
+
+  @@index([customerId])
+  @@index([status])
+  @@index([assignedToId])
+}
