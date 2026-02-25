@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [loading,  setLoading]  = useState(false);
   const { data: session } = useSession();
   const role = (session?.user as any)?.role;
-  const homeHref = role === "SUPERUSER" ? "/dashboard" : "/dashboard/user-home";
+  const homeHref = role === "SUPERUSER" ? "/dashboard" : "/dashboard/maintenance";
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

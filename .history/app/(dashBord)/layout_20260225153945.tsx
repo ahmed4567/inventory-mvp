@@ -28,7 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   { href: "/dashboard/maintenance", icon: "🛠️", label: "Maintenance", superOnly: false },
   { href: "/dashboard/customers",   icon: "👥", label: "Customers",   superOnly: true  },
   { href: "/dashboard/suppliers",   icon: "🚚", label: "Suppliers",   superOnly: true  },
-  { href: "/dashboard/kpi",         icon: "📈", label: "KPI Dashboard", superOnly: true },
+  { href: "/dashboard/kpi", icon: "📈", label: "KPI Dashboard", superOnly: true },
   { href: "/dashboard/users",       icon: "🔐", label: "Users",       superOnly: true  },
   { href: "/dashboard/settings", icon: "⚙️", label: "Settings", superOnly: false },
 ];

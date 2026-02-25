@@ -1,11 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
+ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
  import NotificationBell from "@/app/components/NotificationBell";
 import { useRouter } from "next/navigation"   
-import { getMyNotifications, markAllMyNotificationsRead, getMyUnreadCount } from "@/app/actions/notifications";
 
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -14,36 +13,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { data: session } = useSession();
   const role = (session?.user as any)?.role;
-  const homeHref = role === "SUPERUSER" ? "/dashboard" : "/dashboard/user-home";
-  const [notifOpen,    setNotifOpen]    = useState(false);
-  const [notifs,       setNotifs]       = useState<any[]>([]);
-  const [unreadCount,  setUnreadCount]  = useState(0);
+  const homeHref = role === "SUPERUSER" ? "/dashboard" : "/dashboard/maintenance";
 
   const router = useRouter()
  
  const allNavItems = [
-  { href:   homeHref,               icon: "📊", label: "Dashboard",   superOnly: false },
+  { href:   homeHref,               icon: "📊", label: "Dashboard",   superOnly: true },
   { href: "/dashboard/products",    icon: "📦", label: "Products",    superOnly: false },
   { href: "/dashboard/invoices",    icon: "🧾", label: "Invoices",    superOnly: false },
   { href: "/dashboard/maintenance", icon: "🛠️", label: "Maintenance", superOnly: false },
   { href: "/dashboard/customers",   icon: "👥", label: "Customers",   superOnly: true  },
   { href: "/dashboard/suppliers",   icon: "🚚", label: "Suppliers",   superOnly: true  },
-  { href: "/dashboard/kpi",         icon: "📈", label: "KPI Dashboard", superOnly: true },
   { href: "/dashboard/users",       icon: "🔐", label: "Users",       superOnly: true  },
   { href: "/dashboard/settings", icon: "⚙️", label: "Settings", superOnly: false },
 ];
-
-useEffect(() => {
-  getMyUnreadCount().then(setUnreadCount);
-  const interval = setInterval(() => getMyUnreadCount().then(setUnreadCount), 30000);
-  return () => clearInterval(interval);
-}, []);
-
-async function openNotifs() {
-  setNotifOpen(true);
-  const data = await getMyNotifications();
-  setNotifs(data);
-}
 const navItems = allNavItems.filter(
   (item) => !item.superOnly || role === "SUPERUSER"
 );
@@ -150,61 +133,7 @@ const navItems = allNavItems.filter(
                 </p>
                 <p className="text-xs text-gray-400 mt-0.5">Administrator</p>
               </div>
-{/* Notification center */}
-<button onClick={openNotifs}
-  className="w-full flex items-center justify-between gap-2 px-4 py-2 text-sm text-gray-700
-             hover:bg-gray-50 transition">
-  <span className="flex items-center gap-2">
-    <span>🔔</span> Notifications
-  </span>
-  {unreadCount > 0 && (
-    <span className="bg-red-500 text-white text-xs font-bold rounded-full
-                     min-w-[18px] h-[18px] flex items-center justify-center px-1">
-      {unreadCount}
-    </span>
-  )}
-</button>
 
-{/* Notification Panel */}
-{notifOpen && (
-  <div className="fixed inset-0 z-50 flex">
-    <div className="absolute inset-0 bg-black/30" onClick={() => setNotifOpen(false)} />
-    <div className="absolute left-64 bottom-0 w-80 bg-white rounded-xl shadow-2xl
-                    border border-gray-100 overflow-hidden z-50 mb-4 ml-2">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <h3 className="font-semibold text-gray-800 text-sm">My Notifications</h3>
-        <div className="flex gap-3">
-          {unreadCount > 0 && (
-            <button onClick={async () => {
-              await markAllMyNotificationsRead();
-              setNotifs(prev => prev.map(n => ({ ...n, read: true })));
-              setUnreadCount(0);
-            }} className="text-xs text-blue-600 hover:underline">
-              Mark all read
-            </button>
-          )}
-          <button onClick={() => setNotifOpen(false)} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
-        </div>
-      </div>
-      <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
-        {notifs.length === 0 ? (
-          <p className="text-center py-10 text-gray-400 text-sm">No notifications</p>
-        ) : notifs.map((n) => (
-          <div key={n.id} className={`px-4 py-3 text-sm ${!n.read ? "bg-blue-50" : ""}`}>
-            <p className={`${!n.read ? "text-gray-800 font-medium" : "text-gray-600"} leading-snug`}>
-              {n.message}
-            </p>
-            <p className="text-xs text-gray-400 mt-1">
-              {new Date(n.createdAt).toLocaleDateString("en-US", {
-                month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
-              })}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-)}
            <button onClick={() => { setProfileOpen(false); router.push("/dashboard/settings"); }}
             className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
              <span>⚙️</span> Settings
