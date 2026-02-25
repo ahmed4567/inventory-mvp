@@ -110,10 +110,10 @@ export default function PrintInvoicePage({
           <div className="text-right">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Status</p>
           <span className={`text-sm font-bold px-3 py-1 rounded-full ${
-            String(invoice.status) === "CONFIRMED"  ? "bg-green-100 text-green-700" :
-            String(invoice.status) === "DRAFT"      ? "bg-blue-100  text-blue-700"  :
-            String(invoice.status) === "CANCELLED"  ? "bg-gray-100  text-gray-600"  :
-            "bg-yellow-100 text-yellow-700" }`}>
+  String(invoice.status) === "CONFIRMED"  ? "bg-green-100 text-green-700" :
+  String(invoice.status) === "DRAFT"  ? "bg-blue-100  text-blue-700"  :
+   String(invoice.status) === "CANCELLED"  ?  "bg-gray-100  text-gray-600"
+}`}>
   {String(invoice.status)}
 </span>
           </div>
