@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
- import NotificationBell from "@/app/components/NotificationBell";
+import { getUnreadNotifications } from "@/app/actions/notifications";
+import NotificationBell from "@/app/components/NotificationBell";
 
  
 const allNavItems = [
