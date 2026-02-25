@@ -89,15 +89,14 @@ export default async function InvoiceDetailPage({
           </tfoot>
         </table>
       </div>
-
+<a href={`/dashboard/invoices/${id}/print`} target="_blank"
+  className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium text-sm">
+  🖨️ Print Invoice
+</a>
       <Link href="/dashboard/invoices"
         className="text-sm text-gray-500 hover:text-gray-700">
         ← Back to Invoices
       </Link>
-      <a href={`/dashboard/invoices/${id}/print`} target="_blank"
-  className="border border-gray-300 text-gray-600 px-4 py-2 rounded-lg hover:bg-gray-50 font-medium text-sm">
-  🖨️ Print Invoice
-</a>
     </div>
   );
 }
